@@ -219,8 +219,17 @@
                     body: formData
                 });
 
+                // Check content type
+                const contentType = response.headers.get('content-type');
+                
+                if (contentType && contentType.includes('application/json')) {
+                    // JSON response (error)
+                    const result = await response.json();
+                    throw new Error(result.error || 'Conversion failed');
+                }
+                
                 if (response.ok) {
-                    // File returned directly - download it
+                    // File response - download it
                     const blob = await response.blob();
                     const url = window.URL.createObjectURL(blob);
                     const a = document.createElement('a');
@@ -236,12 +245,11 @@
                     
                     setTimeout(resetForm, 3000);
                 } else {
-                    const result = await response.json();
-                    throw new Error(result.error || 'Conversion failed');
+                    throw new Error('Conversion failed. Please try again.');
                 }
             } catch (error) {
                 converting.style.display = 'none';
-                showError(error.message);
+                showError(error.message || 'Something went wrong. Please try again.');
             }
         }
 
